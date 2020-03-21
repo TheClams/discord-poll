@@ -1,4 +1,6 @@
 token : paste-your-token-here
 
+default_role : default
+
 pollers :
  - admin

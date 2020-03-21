@@ -1,7 +1,7 @@
 import discord, re
 from discord.ext import commands
 
-token = ''
+cfg = {'token' : '', 'default_role' : ''}
 pollers = []
 
 # Read configuration : token, pollers, ...
@@ -13,7 +13,7 @@ with open('config.yaml', "r") as f:
         if section == '' :
             m = re.match(r'(\w+)\s+:\s*(.*)',l)
             if m :
-                if m.group(1) == 'token' : token = m.group(2);
+                if m.group(1) in ['token','default_role'] : cfg[m.group(1)] = m.group(2);
                 else : section = m.group(1);
             else :
                 print('Unkown config line {}'.format(l))
@@ -25,6 +25,7 @@ with open('config.yaml', "r") as f:
             section = ''
 
 # print('token = {}'.format(token))
+print('Default role is {}'.format(cfg['default_role']))
 print('Pollers role are {}'.format(pollers))
 
 bot = discord.Client()
@@ -79,12 +80,18 @@ async def on_message(message):
             txt += '{} {}'.format(reaction,option)
 
         vote_embed = discord.Embed(title=title,description=txt)
-        vote_embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        vote_embed.set_author(name=message.author.nick, icon_url=message.author.avatar_url)
 
         poll_msg = await message.channel.send(embed=vote_embed)
 
         for emoji in emojis:
             await poll_msg.add_reaction(emoji)
 
+@bot.event
+async def on_member_join(member):
+    print('{} has join the server'.format(member.name))
+    role = discord.utils.get(member.guild.roles, name=cfg['default_role'])
+    await member.add_roles(role)
+
 # Start bot
-bot.run(token)
+bot.run(cfg['token'])
